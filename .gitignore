@@ -1,0 +1,10 @@
+*.gem
+*.rbc
+*.swp
+.bundle
+.config
+.ruby-version
+.yardoc
+Gemfile.lock
+tmp
+vendor/
