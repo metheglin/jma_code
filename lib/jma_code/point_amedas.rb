@@ -72,4 +72,63 @@ module JMACode::PointAmedas
       end
     end
   end
+
+  class Snow < Struct.new(
+    :code, :name, :name_phonetic, :type, :government_branch_name,
+    :location, :lat, :lng, :altitude, :observation_started_since, 
+    keyword_init: true
+  )
+    HEADERS = %i(
+      government_branch_name
+      code
+      type
+      name
+      name_phonetic
+      location
+      lat_major
+      lat_minor
+      lng_major
+      lng_minor
+      altitude
+      observation_started_since
+    )
+
+    class << self
+      def load_20240325(&block)
+        path = File.join(File.dirname(__FILE__), "../../data/20240325_PointAmedas/snow_master.csv")
+        File.open(path) do |f|
+          csv = CSV.new(f, headers: HEADERS, row_sep: "\r\n")
+          if block_given?
+            yield(csv)
+          else
+            load(csv, num_headers: 2, &block)
+          end
+        end
+      end
+
+      def load(csv, num_headers: 2)
+        list = []
+        csv.each.with_index do |row, i|
+          next if i < num_headers
+          list << build_by_csv_row(row)
+        end
+        list
+      end
+
+      def build_by_csv_row(row)
+        new(
+          code: row[:code], 
+          name: row[:name], 
+          name_phonetic: row[:name_phonetic],
+          government_branch_name: row[:government_branch_name],
+          type: row[:type],
+          location: row[:location],
+          lat: "#{row[:lat_major]}.#{row[:lat_minor]}".to_f,
+          lng: "#{row[:lng_major]}.#{row[:lng_minor]}".to_f,
+          altitude: row[:altitude],
+          observation_started_since: row[:observation_started_since],
+        )
+      end
+    end
+  end
 end

@@ -1,6 +1,8 @@
 require "csv"
 
 module JMACode
+  using Blank
+
   class WmoObservingStation < Struct.new(
     :code, :name, :name_phonetic, :long_name, :lat, :lng, :used_by,
     keyword_init: true
@@ -51,13 +53,13 @@ module JMACode
           lng: "#{row[:lng_major]}.#{row[:lng_minor]}".to_f,
           long_name: row[:long_name],
           used_by: [
-            row[:used_by_bioseasonal] && !row[:used_by_bioseasonal].empty? ? :bioseasonal : nil,
-            row[:used_by_seasonal] && !row[:used_by_seasonal].empty? ? :seasonal : nil,
-            row[:used_by_special] && !row[:used_by_special].empty? ? :special : nil,
-            row[:name_used_by_uv] && !row[:name_used_by_uv].empty? ? :uv : nil,
-            row[:name_used_by_marine_live_forecast] && !row[:name_used_by_marine_live_forecast].empty? ? :marine_live_forecast : nil,
-            row[:name_used_by_flood_forecast] && !row[:name_used_by_flood_forecast].empty? ? :flood_forecast : nil,
-            row[:name_used_by_weather] && !row[:name_used_by_weather].empty? ? :weather : nil,
+            row[:used_by_bioseasonal].present? ? :bioseasonal : nil,
+            row[:used_by_seasonal].present? ? :seasonal : nil,
+            row[:used_by_special].present? ? :special : nil,
+            row[:name_used_by_uv].present? ? :uv : nil,
+            row[:name_used_by_marine_live_forecast].present? ? :marine_live_forecast : nil,
+            row[:name_used_by_flood_forecast].present? ? :flood_forecast : nil,
+            row[:name_used_by_weather].present? ? :weather : nil,
           ].compact,
         )
       end
