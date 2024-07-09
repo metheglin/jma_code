@@ -8,6 +8,7 @@ require "jma_code/area_flood_forecast"
 require "jma_code/area_information_city"
 require "jma_code/area_forecast_local"
 require "jma_code/area_marine"
+require "jma_code/area_river"
 
 module JMACode
 end
