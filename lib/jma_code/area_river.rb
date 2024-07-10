@@ -46,5 +46,13 @@ module JMACode
       ids = (prefecture_id_list + [pref_id]).sort.uniq
       self.prefecture_ids = ids.join(PREFECTURE_ID_SEPARATOR)
     end
+
+    def to_csv_row
+      HEADERS.map do |k|
+        respond_to?(k) ?
+          public_send(k) :
+          nil
+      end
+    end
   end
 end

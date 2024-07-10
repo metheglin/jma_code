@@ -1,11 +1,12 @@
-require_relative "./tools/river_system"
+require_relative "./jma_ext/river_system"
 
 namespace :river_system do
   desc "Complete river information in data/*.csv"
   task :complete do
     puts "river complete"
-    area_rivers = JMACode::AreaRiver.load(version: "20230105")
-    JMACode::RiverDataPrefecture.all.drop(1).first(3).each do |river_data_pref|
+    version = "20230105"
+    area_rivers = JMACode::AreaRiver.load(version: version)
+    JMAExt::RiverDataPrefecture.all.each do |river_data_pref|
       master_rivers = river_data_pref.get_river_objects
       master_river_codes = master_rivers.map(&:code)
 
@@ -15,7 +16,15 @@ namespace :river_system do
         end
       end
     end
-    # TODO: Output new CSV with prefecture_ids
-    # pp area_rivers.map(&:prefecture_ids)
+    # 
+    CSV.open(File.expand_path("../data/#{version}-completed_AreaRiver.csv", __dir__), "wb") do |csv|
+      (JMACode::AreaRiver::NUM_HEADER_ROWS - 1).times.each do
+        csv << []
+      end
+      csv << JMACode::AreaRiver::HEADERS
+      area_rivers.each do |area_river|
+        csv << area_river.to_csv_row
+      end
+    end
   end
 end
