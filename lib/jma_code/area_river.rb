@@ -4,18 +4,21 @@ module JMACode
   class AreaRiver < Struct.new(
     :code, :name, :name_phonetic,
     :name2, :name_phonetic2, :name3, :name_phonetic3,
-    :prefecture_ids,
+    :prefecture_codes,
     keyword_init: true
   )
-    HEADERS = %i(code name name_phonetic name2 name_phonetic2 name3 name_phonetic3 prefecture_ids)
+    CSV_ROW_SEP = "\r\n"
+    HEADERS = %i(code name name_phonetic name2 name_phonetic2 name3 name_phonetic3 prefecture_codes)
     NUM_HEADER_ROWS = 3
-    PREFECTURE_ID_SEPARATOR = '/'
+    PREFECTURE_CODE_SEPARATOR = '/'
 
     class << self
-      def load_csv(version: "20230105")
+      attr_accessor :prefectures
+
+      def load_csv(version: "20230105-completed")
         path = File.join(File.dirname(__FILE__), "../../data/#{version}_AreaRiver.csv")
         File.open(path) do |f|
-          csv = CSV.new(f, headers: HEADERS, row_sep: "\r\n")
+          csv = CSV.new(f, headers: HEADERS, row_sep: CSV_ROW_SEP)
           yield(csv)
         end
       end
@@ -31,20 +34,30 @@ module JMACode
               name_phonetic2: row[:name_phonetic2],
               name3: row[:name3], 
               name_phonetic3: row[:name_phonetic3],
-              prefecture_ids: row[:prefecture_ids]
+              prefecture_codes: row[:prefecture_codes]
             )
           end
         end
       end
+
+      def prefectures
+        @prefectures ||= Prefecture.all
+      end
     end
 
-    def prefecture_id_list
-      (prefecture_ids || "").split(PREFECTURE_ID_SEPARATOR)
+    def prefecture_code_list
+      @prefecture_code_list ||= (prefecture_codes || "").split(PREFECTURE_CODE_SEPARATOR)
     end
 
-    def add_prefecture_id(pref_id)
-      ids = (prefecture_id_list + [pref_id]).sort.uniq
-      self.prefecture_ids = ids.join(PREFECTURE_ID_SEPARATOR)
+    def add_prefecture_code(pref_code)
+      ids = (prefecture_code_list + [pref_code]).sort.uniq
+      self.prefecture_codes = ids.join(PREFECTURE_CODE_SEPARATOR)
+    end
+
+    def prefectures
+      @prefectures ||= self.class.prefectures.select{|pref|
+        prefecture_code_list.include?(pref.code)
+      }
     end
 
     def to_csv_row

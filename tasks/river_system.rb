@@ -12,12 +12,13 @@ namespace :river_system do
 
       area_rivers.each do |area_river|
         if master_river_codes.include?(area_river.code)
-          area_river.add_prefecture_id(river_data_pref.pref_id)
+          area_river.add_prefecture_code(river_data_pref.pref_code)
         end
       end
     end
     # 
-    CSV.open(File.expand_path("../data/#{version}-completed_AreaRiver.csv", __dir__), "wb") do |csv|
+    path = File.expand_path("../data/#{version}-completed_AreaRiver.csv", __dir__)
+    CSV.open(path, "wb", row_sep: JMACode::AreaRiver::CSV_ROW_SEP) do |csv|
       (JMACode::AreaRiver::NUM_HEADER_ROWS - 1).times.each do
         csv << []
       end

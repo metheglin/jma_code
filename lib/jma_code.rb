@@ -1,5 +1,6 @@
 require "jma_code/version"
 require "jma_code/ext/blank"
+require "jma_code/prefecture"
 require "jma_code/wmo_observing_station"
 require "jma_code/water_level_station"
 require "jma_code/river_office"
