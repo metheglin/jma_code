@@ -66,5 +66,12 @@ module JMACode
         end
       end
     end
+
+    def type
+      @type ||= begin
+        res = name.sub(short_name, '')
+        res.empty? ? '道' : res
+      end
+    end
   end
 end
