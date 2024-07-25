@@ -12,6 +12,8 @@ module JMACode
     NUM_HEADER_ROWS = 3
 
     class << self
+      attr_accessor :data
+
       def load_csv(version: "20240418")
         path = File.join(File.dirname(__FILE__), "../../data/#{version}_WaterLevelStation.csv")
         File.open(path) do |f|
@@ -32,8 +34,8 @@ module JMACode
         end
       end
 
-      def rivers
-        @rivers ||= AreaRiver.load
+      def get
+        @data ||= load
       end
     end
 
@@ -42,7 +44,7 @@ module JMACode
     end
 
     def river
-      @river ||= self.class.rivers.find{|r| r.code == river_code}
+      @river ||= AreaRiver.get.find{|r| r.code == river_code}
     end
   end
 end

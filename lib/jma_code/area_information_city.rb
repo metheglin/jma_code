@@ -17,8 +17,8 @@ module JMACode
       area_forecast_local_code
       used_by_weather_alert
       used_by_tornado_alert
-      used_by_long_surge_alert
-      used_by_short_surge_alert
+      used_by_storm_surge_alert
+      used_by_high_wave_alert
       used_by_landslide_alert
       used_by_flood_alert
       name_used_by_earthquake
@@ -32,7 +32,7 @@ module JMACode
     )
 
     class << self
-      attr_accessor :area_forecast_locals
+      attr_accessor :data
 
       def load_csv(version: "20240216")
         path = File.join(File.dirname(__FILE__), "../../data/#{version}_AreaInformationCity-AreaForecastLocalM/AreaInformationCity.csv")
@@ -48,6 +48,10 @@ module JMACode
             build_by_csv_row(row)
           end
         end
+      end
+
+      def get
+        @data ||= load
       end
 
       def build_by_csv_row(row)
@@ -74,8 +78,8 @@ module JMACode
           used_by: [
             row[:used_by_weather_alert] == '1' ? :weather_alert : nil,
             row[:used_by_tornado_alert] == '1' ? :tornado_alert : nil,
-            row[:used_by_long_surge_alert] == '1' ? :long_surge_alert : nil,
-            row[:used_by_short_surge_alert] == '1' ? :short_surge_alert : nil,
+            row[:used_by_storm_surge_alert] == '1' ? :storm_surge_alert : nil,
+            row[:used_by_high_wave_alert] == '1' ? :high_wave_alert : nil,
             row[:used_by_landslide_alert] == '1' ? :landslide_alert : nil,
             row[:used_by_flood_alert] == '1' ? :flood_alert : nil,
             row[:name_used_by_earthquake].present? ? :earthquake : nil,
@@ -88,7 +92,7 @@ module JMACode
     end
 
     def area_forecast_local
-      @area_forecast_local ||= (self.class.area_forecast_locals || []).find{|x| x.code == area_forecast_local_code}
+      @area_forecast_local ||= AreaForecastLocal.get.find{|x| x.code == area_forecast_local_code}
     end
   end
 end

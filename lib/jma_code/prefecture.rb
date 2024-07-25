@@ -54,7 +54,9 @@ module JMACode
     ]
 
     class << self
-      def all
+      attr_accessor :data
+      
+      def load
         DATA.map do |id, name, short_name, slug|
           new(
             id: id, 
@@ -64,6 +66,10 @@ module JMACode
             slug: slug
           )
         end
+      end
+
+      def get
+        @data ||= load
       end
     end
 

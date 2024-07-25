@@ -13,7 +13,7 @@ module JMACode
     PREFECTURE_CODE_SEPARATOR = '/'
 
     class << self
-      attr_accessor :prefectures
+      attr_accessor :data
 
       def load_csv(version: "20230105-completed")
         path = File.join(File.dirname(__FILE__), "../../data/#{version}_AreaRiver.csv")
@@ -40,12 +40,8 @@ module JMACode
         end
       end
 
-      def prefectures
-        @prefectures ||= Prefecture.all
-      end
-
-      def water_level_stations
-        @water_level_stations ||= WaterLevelStation.load
+      def get
+        @data ||= load
       end
     end
 
@@ -59,13 +55,13 @@ module JMACode
     end
 
     def prefectures
-      @prefectures ||= self.class.prefectures.select{|pref|
+      @prefectures ||= Prefecture.get.select{|pref|
         prefecture_code_list.include?(pref.code)
       }
     end
 
     def water_level_stations
-      @water_level_stations ||= self.class.water_level_stations.select{|w| w.river_code == code}
+      @water_level_stations ||= WaterLevelStation.get.select{|w| w.river_code == code}
     end
 
     def to_csv_row
