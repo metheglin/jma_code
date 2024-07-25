@@ -7,6 +7,8 @@ module JMACode
     :area_forecast_local_code, :used_by,
     keyword_init: true
   )
+    CSV_ROW_SEP = "\r\n"
+    NUM_HEADER_ROWS = 3
     HEADERS = %i(
       code
       name
@@ -32,25 +34,20 @@ module JMACode
     class << self
       attr_accessor :area_forecast_locals
 
-      def load_20240216(&block)
-        path = File.join(File.dirname(__FILE__), "../../data/20240216_AreaInformationCity-AreaForecastLocalM/AreaInformationCity.csv")
+      def load_csv(version: "20240216")
+        path = File.join(File.dirname(__FILE__), "../../data/#{version}_AreaInformationCity-AreaForecastLocalM/AreaInformationCity.csv")
         File.open(path) do |f|
-          csv = CSV.new(f, headers: HEADERS, row_sep: "\r\n")
-          if block_given?
-            yield(csv)
-          else
-            load(csv, num_headers: 3, &block)
-          end
+          csv = CSV.new(f, headers: HEADERS, row_sep: CSV_ROW_SEP)
+          yield(csv)
         end
       end
 
-      def load(csv, num_headers: 3)
-        list = []
-        csv.each.with_index do |row, i|
-          next if i < num_headers
-          list << build_by_csv_row(row)
+      def load(**args)
+        load_csv(**args) do |csv|
+          csv.drop(NUM_HEADER_ROWS).map do |row|
+            build_by_csv_row(row)
+          end
         end
-        list
       end
 
       def build_by_csv_row(row)

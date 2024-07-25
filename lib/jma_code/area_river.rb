@@ -43,6 +43,10 @@ module JMACode
       def prefectures
         @prefectures ||= Prefecture.all
       end
+
+      def water_level_stations
+        @water_level_stations ||= WaterLevelStation.load
+      end
     end
 
     def prefecture_code_list
@@ -58,6 +62,10 @@ module JMACode
       @prefectures ||= self.class.prefectures.select{|pref|
         prefecture_code_list.include?(pref.code)
       }
+    end
+
+    def water_level_stations
+      @water_level_stations ||= self.class.water_level_stations.select{|w| w.river_code == code}
     end
 
     def to_csv_row

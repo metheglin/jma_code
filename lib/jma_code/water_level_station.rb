@@ -7,38 +7,42 @@ module JMACode
     :code, :name, :river_name,
     keyword_init: true
   )
-    HEADERS = %i(
-      code 
-      name 
-      river_name
-    )
+    CSV_ROW_SEP = "\r\n"
+    HEADERS = %i(code name river_name)
+    NUM_HEADER_ROWS = 3
 
     class << self
-      def load_20240418(&block)
-        path = File.join(File.dirname(__FILE__), "../../data/20240418_WaterLevelStation.csv")
+      def load_csv(version: "20240418")
+        path = File.join(File.dirname(__FILE__), "../../data/#{version}_WaterLevelStation.csv")
         File.open(path) do |f|
-          csv = CSV.new(f, headers: HEADERS, row_sep: "\r\n")
-          if block_given?
-            yield(csv)
-          else
-            load(csv, num_headers: 3, &block)
+          csv = CSV.new(f, headers: HEADERS, row_sep: CSV_ROW_SEP)
+          yield(csv)
+        end
+      end
+
+      def load(**args)
+        load_csv(**args) do |csv|
+          csv.drop(NUM_HEADER_ROWS).map do |row|
+            new(
+              code: row[:code], 
+              name: row[:name], 
+              river_name: row[:river_name],
+            )
           end
         end
       end
 
-      def load(csv, num_headers: 3)
-        csv.drop(num_headers).map do |row|
-          build_by_csv_row(row)
-        end
+      def rivers
+        @rivers ||= AreaRiver.load
       end
+    end
 
-      def build_by_csv_row(row)
-        new(
-          code: row[:code], 
-          name: row[:name], 
-          river_name: row[:river_name],
-        )
-      end
+    def river_code
+      code[0..9]
+    end
+
+    def river
+      @river ||= self.class.rivers.find{|r| r.code == river_code}
     end
   end
 end
