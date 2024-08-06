@@ -92,6 +92,45 @@ module JMACode
           used_by: used_by_fields.select{|f| row[f] == '1'}.map{|f| f.to_s.sub(/\Aused_by_/, '').to_sym}
         )
       end
+
+      def build_tree(areas=nil, cities=nil)
+        areas ||= get
+        cities ||= JMACode::AreaInformationCity.get
+
+        toplevels, areas = areas.partition{|a| a.any_belonging_locals.blank?}
+        pref_areas = areas.group_by(&:prefecture_code)
+        pref_cities = cities.group_by(&:prefecture_code)
+        toplevels.map{|t|
+          current_areas = pref_areas[t.prefecture_code]
+          current_cities = pref_cities[t.prefecture_code]
+
+          secondlevels = current_areas.select{|a| a.any_belonging_locals.include?(t)}
+          secondlevels_children = secondlevels.map{|s|
+            thirdlevels = current_areas.select{|a| a.any_belonging_locals.include?(s)}
+            thirdlevels_children = thirdlevels.map{|th| 
+              forthlevels = current_cities.select{|c| c.area_forecast_local_code == th.code}
+              [
+                block_given? ? yield(th) : th, 
+                forthlevels.map{|f|
+                  [block_given? ? yield(f) : f, nil]
+                }
+              ]
+            }
+            [
+              block_given? ? yield(s) : s,
+              thirdlevels_children
+            ]
+          }
+          [
+            block_given? ? yield(t) : t,
+            secondlevels_children
+          ]
+        }
+      end
+    end
+
+    def prefecture_code
+      @prefecture_code ||= code[0, 2]
     end
 
     def area_information_cities
@@ -113,11 +152,11 @@ module JMACode
     end
 
     def any_belonging_locals
-      [belonging_local_in_weather_alert, belonging_local_in_tornado_alert].compact.uniq(&:code)
+      @any_belonging_locals ||= [belonging_local_in_weather_alert, belonging_local_in_tornado_alert].compact.uniq(&:code)
     end
 
     def any_ancestry_locals
-      [
+      @any_ancestry_locals ||= [
         belonging_local_in_weather_alert, 
         belonging_local_in_tornado_alert, 
         belonging_local_in_weather_alert&.belonging_local_in_weather_alert, 

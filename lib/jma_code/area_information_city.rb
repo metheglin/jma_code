@@ -91,6 +91,10 @@ module JMACode
       end
     end
 
+    def prefecture_code
+      @prefecture_code ||= code[0, 2]
+    end
+    
     def area_forecast_local
       @area_forecast_local ||= AreaForecastLocal.get.find{|x| x.code == area_forecast_local_code}
     end
