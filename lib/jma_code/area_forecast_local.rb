@@ -116,6 +116,15 @@ module JMACode
       [belonging_local_in_weather_alert, belonging_local_in_tornado_alert].compact.uniq(&:code)
     end
 
+    def any_ancestry_locals
+      [
+        belonging_local_in_weather_alert, 
+        belonging_local_in_tornado_alert, 
+        belonging_local_in_weather_alert&.belonging_local_in_weather_alert, 
+        belonging_local_in_tornado_alert&.belonging_local_in_tornado_alert, 
+      ].compact.uniq(&:code)
+    end
+
     def to_csv_row
       HEADERS.map do |k|
         respond_to?(k) ?
