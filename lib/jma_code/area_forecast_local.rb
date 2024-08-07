@@ -100,37 +100,47 @@ module JMACode
         toplevels, areas = areas.partition{|a| a.any_belonging_locals.blank?}
         pref_areas = areas.group_by(&:prefecture_code)
         pref_cities = cities.group_by(&:prefecture_code)
-        toplevels.map{|t|
-          current_areas = pref_areas[t.prefecture_code]
-          current_cities = pref_cities[t.prefecture_code]
+        toplevels.group_by(&:prefecture).map{|pref, pref_toplevels|
+          current_areas = pref_areas[pref.code]
+          current_cities = pref_cities[pref.code]
 
-          secondlevels = current_areas.select{|a| a.any_belonging_locals.include?(t)}
-          secondlevels_children = secondlevels.map{|s|
-            thirdlevels = current_areas.select{|a| a.any_belonging_locals.include?(s)}
-            thirdlevels_children = thirdlevels.map{|th| 
-              forthlevels = current_cities.select{|c| c.area_forecast_local_code == th.code}
-              [
-                block_given? ? yield(th) : th, 
-                forthlevels.map{|f|
-                  [block_given? ? yield(f) : f, nil]
+          [
+            block_given? ? yield(pref) : pref, 
+            pref_toplevels.map{|t|
+              secondlevels = current_areas.select{|a| a.any_belonging_locals.include?(t)}
+              secondlevels_children = secondlevels.map{|s|
+                thirdlevels = current_areas.select{|a| a.any_belonging_locals.include?(s)}
+                thirdlevels_children = thirdlevels.map{|th| 
+                  forthlevels = current_cities.select{|c| c.area_forecast_local_code == th.code}
+                  [
+                    block_given? ? yield(th) : th, 
+                    forthlevels.map{|f|
+                      [block_given? ? yield(f) : f, nil]
+                    }
+                  ]
                 }
+                [
+                  block_given? ? yield(s) : s,
+                  thirdlevels_children
+                ]
+              }
+              [
+                block_given? ? yield(t) : t,
+                secondlevels_children
               ]
             }
-            [
-              block_given? ? yield(s) : s,
-              thirdlevels_children
-            ]
-          }
-          [
-            block_given? ? yield(t) : t,
-            secondlevels_children
           ]
+
         }
       end
     end
 
     def prefecture_code
       @prefecture_code ||= code[0, 2]
+    end
+
+    def prefecture
+      @prefecture ||= Prefecture.get.find{|pref| pref.code == prefecture_code}
     end
 
     def area_information_cities

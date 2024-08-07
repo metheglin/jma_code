@@ -15,20 +15,20 @@ module JMACode
       name_used_by_weather
       name_phonetic_used_by_weather
       area_forecast_local_code
-      used_by_weather_alert
-      used_by_tornado_alert
-      used_by_storm_surge_alert
-      used_by_high_wave_alert
-      used_by_landslide_alert
-      used_by_flood_alert
+      used_by_weather
+      used_by_tornado
+      used_by_storm_surge
+      used_by_high_wave
+      used_by_landslide
+      used_by_flood
       name_used_by_earthquake
       name_phonetic_used_by_earthquake
       name_used_by_volcano
       name_phonetic_used_by_volcano
       name_used_by_uv
       name_phonetic_used_by_uv
-      name_used_by_rainstorm_alert
-      name_phonetic_used_by_rainstorm_alert
+      name_used_by_rainstorm
+      name_phonetic_used_by_rainstorm
     )
 
     class << self
@@ -63,8 +63,8 @@ module JMACode
           [row[:name_used_by_volcano], row[:name_phonetic_used_by_volcano]]
         elsif row[:name_used_by_uv].present?
           [row[:name_used_by_uv], row[:name_phonetic_used_by_uv]]
-        elsif row[:name_used_by_rainstorm_alert].present?
-          [row[:name_used_by_rainstorm_alert], row[:name_phonetic_used_by_rainstorm_alert]]
+        elsif row[:name_used_by_rainstorm].present?
+          [row[:name_used_by_rainstorm], row[:name_phonetic_used_by_rainstorm]]
         else
           []
         end
@@ -76,16 +76,16 @@ module JMACode
           alt_name_phonetic: alt_name_phonetic,
           area_forecast_local_code: row[:area_forecast_local_code],
           used_by: [
-            row[:used_by_weather_alert] == '1' ? :weather_alert : nil,
-            row[:used_by_tornado_alert] == '1' ? :tornado_alert : nil,
-            row[:used_by_storm_surge_alert] == '1' ? :storm_surge_alert : nil,
-            row[:used_by_high_wave_alert] == '1' ? :high_wave_alert : nil,
-            row[:used_by_landslide_alert] == '1' ? :landslide_alert : nil,
-            row[:used_by_flood_alert] == '1' ? :flood_alert : nil,
+            row[:used_by_weather] == '1' ? :weather : nil,
+            row[:used_by_tornado] == '1' ? :tornado : nil,
+            row[:used_by_storm_surge] == '1' ? :storm_surge : nil,
+            row[:used_by_high_wave] == '1' ? :high_wave : nil,
+            row[:used_by_landslide] == '1' ? :landslide : nil,
+            row[:used_by_flood] == '1' ? :flood : nil,
             row[:name_used_by_earthquake].present? ? :earthquake : nil,
             row[:name_used_by_volcano].present? ? :volcano : nil,
             row[:name_used_by_uv].present? ? :uv : nil,
-            row[:name_used_by_rainstorm_alert].present? ? :rainstorm_alert : nil,
+            row[:name_used_by_rainstorm].present? ? :rainstorm : nil,
           ].compact
         )
       end
@@ -94,7 +94,7 @@ module JMACode
     def prefecture_code
       @prefecture_code ||= code[0, 2]
     end
-    
+
     def area_forecast_local
       @area_forecast_local ||= AreaForecastLocal.get.find{|x| x.code == area_forecast_local_code}
     end
