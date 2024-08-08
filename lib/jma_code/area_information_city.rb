@@ -98,5 +98,9 @@ module JMACode
     def area_forecast_local
       @area_forecast_local ||= AreaForecastLocal.get.find{|x| x.code == area_forecast_local_code}
     end
+
+    def child_of?(area_or_city)
+      area_forecast_local_code == area_or_city.code
+    end
   end
 end

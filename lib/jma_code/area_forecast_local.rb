@@ -107,11 +107,11 @@ module JMACode
           [
             block_given? ? yield(pref) : pref, 
             pref_toplevels.map{|t|
-              secondlevels = current_areas.select{|a| a.any_belonging_locals.include?(t)}
+              secondlevels = (current_areas+current_cities).select{|a| a.child_of?(t)}
               secondlevels_children = secondlevels.map{|s|
-                thirdlevels = current_areas.select{|a| a.any_belonging_locals.include?(s)}
+                thirdlevels = (current_areas+current_cities).select{|a| a.child_of?(s)}
                 thirdlevels_children = thirdlevels.map{|th| 
-                  forthlevels = current_cities.select{|c| c.area_forecast_local_code == th.code}
+                  forthlevels = current_cities.select{|c| c.child_of?(th)}
                   [
                     block_given? ? yield(th) : th, 
                     forthlevels.map{|f|
@@ -132,6 +132,18 @@ module JMACode
           ]
 
         }
+      end
+
+      def walk_tree(tree, &block)
+        tree.map do |area, children|
+          a = block.call(area)
+          c = if children.is_a?(Array) and children.present?
+            walk_tree(children, &block)
+          else
+            children
+          end
+          [a, c]
+        end
       end
     end
 
@@ -172,6 +184,10 @@ module JMACode
         belonging_local_in_weather_alert&.belonging_local_in_weather_alert, 
         belonging_local_in_tornado_alert&.belonging_local_in_tornado_alert, 
       ].compact.uniq(&:code)
+    end
+
+    def child_of?(area_or_city)
+      any_belonging_locals.map(&:code).include?(area_or_city.code)
     end
 
     def to_csv_row
