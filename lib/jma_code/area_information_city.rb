@@ -3,7 +3,7 @@ module JMACode
   using Blank
 
   class AreaInformationCity < Struct.new(
-    :code, :name, :alt_name, :alt_name_phonetic,
+    :code, :long_name, :alt_name, :alt_name_phonetic,
     :area_forecast_local_code, :used_by,
     keyword_init: true
   )
@@ -11,7 +11,7 @@ module JMACode
     NUM_HEADER_ROWS = 3
     HEADERS = %i(
       code
-      name
+      long_name
       name_used_by_weather
       name_phonetic_used_by_weather
       area_forecast_local_code
@@ -71,7 +71,7 @@ module JMACode
 
         new(
           code: row[:code], 
-          name: row[:name], 
+          long_name: row[:long_name], 
           alt_name: alt_name,
           alt_name_phonetic: alt_name_phonetic,
           area_forecast_local_code: row[:area_forecast_local_code],
@@ -91,6 +91,14 @@ module JMACode
       end
     end
 
+    def name
+      alt_name.presence || long_name
+    end
+
+    def name_phonetic
+      alt_name_phonetic
+    end
+
     def prefecture_code
       @prefecture_code ||= code[0, 2]
     end
@@ -101,6 +109,16 @@ module JMACode
 
     def child_of?(area_or_city)
       area_forecast_local_code == area_or_city.code
+    end
+
+    def to_h
+      {
+        code: code,
+        name: name,
+        name_phonetic: name_phonetic,
+        area_forecast_local_code: area_forecast_local_code,
+        used_by: used_by,
+      }
     end
   end
 end
