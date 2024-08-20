@@ -2,7 +2,7 @@
 module JMACode
   using Blank
 
-  class AreaForecastLocal < Struct.new(
+  class AreaForecastLocalM < Struct.new(
     :code, :name, :name_phonetic, 
     :belonging_local_code_in_weather_alert, 
     :belonging_local_code_in_tornado_alert, 
@@ -156,20 +156,20 @@ module JMACode
     end
 
     def area_information_cities
-      @area_information_cities ||= AreaInformationCity.get.select{|x| x.area_forecast_local_code == code}
+      @area_information_cities ||= AreaInformationCity.get.select{|x| x.area_forecast_local_m_code == code}
     end
 
     def belonging_local_in_weather_alert
       return nil if belonging_local_code_in_weather_alert.blank?
       @belonging_local_in_weather_alert ||= begin
-        AreaForecastLocal.get.find{|a| a.code == belonging_local_code_in_weather_alert}
+        AreaForecastLocalM.get.find{|a| a.code == belonging_local_code_in_weather_alert}
       end
     end
 
     def belonging_local_in_tornado_alert
       return nil if belonging_local_code_in_tornado_alert.blank?
       @belonging_local_in_tornado_alert ||= begin
-        AreaForecastLocal.get.find{|a| a.code == belonging_local_code_in_tornado_alert}
+        AreaForecastLocalM.get.find{|a| a.code == belonging_local_code_in_tornado_alert}
       end
     end
 
@@ -192,9 +192,14 @@ module JMACode
 
     def to_csv_row
       HEADERS.map do |k|
-        respond_to?(k) ?
-          public_send(k) :
-          nil
+        if respond_to?(k)
+          public_send(k)
+        else
+          if k.to_s.start_with?("used_by_")
+            x = k.to_s.sub('used_by_', '').to_sym
+            used_by.include?(x) ? '1' : nil
+          end
+        end
       end
     end
   end

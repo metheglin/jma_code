@@ -4,7 +4,9 @@ module JMACode
 
   class AreaInformationCity < Struct.new(
     :code, :long_name, :alt_name, :alt_name_phonetic,
-    :area_forecast_local_code, :used_by,
+    :area_forecast_local_m_code,
+    :area_forecast_local_e_code,
+    :used_by,
     keyword_init: true
   )
     CSV_ROW_SEP = "\r\n"
@@ -14,7 +16,7 @@ module JMACode
       long_name
       name_used_by_weather
       name_phonetic_used_by_weather
-      area_forecast_local_code
+      area_forecast_local_m_code
       used_by_weather
       used_by_tornado
       used_by_storm_surge
@@ -29,12 +31,13 @@ module JMACode
       name_phonetic_used_by_uv
       name_used_by_rainstorm
       name_phonetic_used_by_rainstorm
+      area_forecast_local_e_code
     )
 
     class << self
       attr_accessor :data
 
-      def load_csv(version: "20240216")
+      def load_csv(version: "20240216-completed")
         path = File.join(File.dirname(__FILE__), "../../data/#{version}_AreaInformationCity-AreaForecastLocalM/AreaInformationCity.csv")
         File.open(path) do |f|
           csv = CSV.new(f, headers: HEADERS, row_sep: CSV_ROW_SEP)
@@ -74,7 +77,8 @@ module JMACode
           long_name: row[:long_name], 
           alt_name: alt_name,
           alt_name_phonetic: alt_name_phonetic,
-          area_forecast_local_code: row[:area_forecast_local_code],
+          area_forecast_local_m_code: row[:area_forecast_local_m_code],
+          area_forecast_local_e_code: row[:area_forecast_local_e_code],
           used_by: [
             row[:used_by_weather] == '1' ? :weather : nil,
             row[:used_by_tornado] == '1' ? :tornado : nil,
@@ -103,12 +107,35 @@ module JMACode
       @prefecture_code ||= code[0, 2]
     end
 
-    def area_forecast_local
-      @area_forecast_local ||= AreaForecastLocal.get.find{|x| x.code == area_forecast_local_code}
+    def area_forecast_local_m
+      @area_forecast_local_m ||= AreaForecastLocalM.get.find{|x| x.code == area_forecast_local_m_code}
+    end
+
+    def area_forecast_local_e
+      @area_forecast_local_e ||= AreaForecastLocalE.get.find{|x| x.code == area_forecast_local_e_code}
     end
 
     def child_of?(area_or_city)
-      area_forecast_local_code == area_or_city.code
+      area_forecast_local_m_code == area_or_city.code
+    end
+
+    def to_csv_row
+      HEADERS.map do |k|
+        if respond_to?(k)
+          public_send(k)
+        else
+          if k.to_s.start_with?("used_by_")
+            x = k.to_s.sub('used_by_', '').to_sym
+            used_by.include?(x) ? '1' : nil
+          elsif k.to_s.start_with?("name_used_by_")
+            x = k.to_s.sub('name_used_by_', '').to_sym
+            used_by.include?(x) ? alt_name : nil
+          elsif k.to_s.start_with?("name_phonetic_used_by_")
+            x = k.to_s.sub('name_phonetic_used_by_', '').to_sym
+            used_by.include?(x) ? alt_name_phonetic : nil
+          end
+        end
+      end
     end
 
     def to_h
@@ -116,7 +143,7 @@ module JMACode
         code: code,
         name: name,
         name_phonetic: name_phonetic,
-        area_forecast_local_code: area_forecast_local_code,
+        area_forecast_local_m_code: area_forecast_local_m_code,
         used_by: used_by,
       }
     end
