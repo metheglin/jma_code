@@ -22,12 +22,12 @@ namespace :area_earthquake_system do
     headers3 = %i(area_local_code area_local_name point_code point_name point_name_phonetic)
     list3 = CSV.read(path3, headers: headers3, row_sep: "\r\n").drop(3)
 
-    area_locals1 = list1.map{[_1[:area_local_code], _1[:area_local_name], _1[:area_local_name_phonetic]]}
-    area_locals2 = list2.map{[_1[:area_local_code], _1[:area_local_name], nil]}
-    area_locals3 = list3.map{[_1[:area_local_code], _1[:area_local_name], nil]}
+    area_locals1 = list1.map{[_1[:area_local_code], _1[:area_local_name], _1[:area_local_name_phonetic], _1[:point_code]]}
+    area_locals2 = list2.map{[_1[:area_local_code], _1[:area_local_name], nil, _1[:point_code]]}
+    area_locals3 = list3.map{[_1[:area_local_code], _1[:area_local_name], nil, _1[:point_code]]}
 
-    area_forecast_locals = (area_locals1 + area_locals2 + area_locals3).uniq{|code,name,name_phonetic| code}.map{|code,name,name_phonetic|
-      JMACode::AreaForecastLocalE.new(code: code, name: name, name_phonetic: name_phonetic)
+    area_forecast_locals = (area_locals1 + area_locals2 + area_locals3).uniq{|code,name,name_phonetic,point_code| code}.map{|code,name,name_phonetic,point_code|
+      JMACode::AreaForecastLocalE.new(code: code, name: name, name_phonetic: name_phonetic, prefecture_code: point_code[0,2])
     }
 
     FileUtils.mkdir_p(dest_prefix)

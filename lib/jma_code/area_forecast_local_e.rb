@@ -2,7 +2,7 @@ module JMACode
   using Blank
 
   class AreaForecastLocalE < Struct.new(
-    :code, :name, :name_phonetic, 
+    :code, :name, :name_phonetic, :prefecture_code,
     keyword_init: true
   )
     CSV_ROW_SEP = "\r\n"
@@ -11,6 +11,7 @@ module JMACode
       code
       name
       name_phonetic
+      prefecture_code
     )
 
     class << self
@@ -41,17 +42,48 @@ module JMACode
           code: row[:code], 
           name: row[:name], 
           name_phonetic: row[:name_phonetic],
+          prefecture_code: row[:prefecture_code],
         )
+      end
+
+      def build_tree(areas=nil, cities=nil)
+        areas ||= get
+        cities ||= JMACode::AreaInformationCity.get
+        
+        areas.group_by(&:prefecture).map{|pref, pref_areas|
+          [
+            block_given? ? yield(pref) : pref, 
+            pref_areas.map{|a|
+              [
+                block_given? ? yield(a) : a,
+                a.area_information_cities.map{|c|
+                  [
+                    block_given? ? yield(c) : c, 
+                    nil
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      end
+
+      def walk_tree(tree, &block)
+        tree.map do |area, children|
+          a = block.call(area)
+          c = if children.is_a?(Array) and children.present?
+            walk_tree(children, &block)
+          else
+            children
+          end
+          [a, c]
+        end
       end
     end
 
-    # def prefecture_code
-    #   @prefecture_code ||= code[0, 2]
-    # end
-
-    # def prefecture
-    #   @prefecture ||= Prefecture.get.find{|pref| pref.code == prefecture_code}
-    # end
+    def prefecture
+      @prefecture ||= Prefecture.get.find{|pref| pref.code == prefecture_code}
+    end
 
     def area_information_cities
       @area_information_cities ||= AreaInformationCity.get.select{|x| x.area_forecast_local_e_code == code}
